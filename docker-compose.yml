@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  lab:
+    container_name: amp
+    image: lab:latest
+    build: .
+    ports:
+      - "8000:80"
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./app:/var/www/app
+    environment:
+      APP_ENV: development
