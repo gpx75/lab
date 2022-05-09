@@ -20,6 +20,7 @@ ARG appName=app
 
 # php
 ADD ./conf/php/www.conf /usr/local/etc/php-fpm.d/www.conf
+ADD ./conf/php/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
 ADD ./conf/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 ADD ./conf/php/zend-opcache.ini /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 # RUN mkdir -p /var/log/php
