@@ -3,7 +3,11 @@ services:
   lab:
     container_name: amp
     image: lab:latest
-    build: .
+    build:
+       context: .
+       args:
+         - phpTag=8.1-fpm
+         - nodeTag=18-bullseye
     ports:
       - "8000:80"
       - "3000:3000"
