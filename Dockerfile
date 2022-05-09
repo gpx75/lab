@@ -203,7 +203,7 @@ COPY ./conf/redis/redis.conf /etc/redis/redis.conf
 
 WORKDIR /var/www/$appName
 
-CMD ["supervisord", "-n", "-j", "/supervisord.pid", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 
 
