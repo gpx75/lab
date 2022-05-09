@@ -1,17 +1,14 @@
 version: "3.9"
 services:
   lab:
-    container_name: amp
-    image: lab:latest
+    container_name: app
     build:
        context: .
        args:
          - phpTag=8.1-fpm
          - nodeTag=18-bullseye
     ports:
-      - "8000:80"
-      - "3000:3000"
-      - "3001:3001"
+      - "8001:80"
     volumes:
       - ./app:/var/www/app
     environment:
