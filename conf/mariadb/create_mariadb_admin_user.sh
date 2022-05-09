@@ -1,6 +1,6 @@
 #!/bin/bash
 
-/usr/bin/mysqld_safe > /dev/null 2>&1 &
+# /usr/bin/mysqld_safe > /dev/null 2>&1 &
 
 RET=1
 while [[ RET -ne 0 ]]; do
@@ -21,14 +21,5 @@ mysql -uroot -e "GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_ADMIN_USER'@'$MYSQL_ADMI
 mysqladmin -uroot create $MYSQL_DB_NAME
 
 echo "=> Done!"
-
-echo "========================================================================"
-echo "You can now connect to this MariaDB Server using:"
-echo ""
-echo "    mysql -u $MYSQL_ADMIN_USER -p $PASS -h$(hostname --ip-address) -P $MYSQL_PORT"
-echo ""
-echo "Please remember to change the above password as soon as possible!"
-echo "MariaDB user 'root' has no password but only allows local connections"
-echo "========================================================================"
 
 mysqladmin -uroot shutdown
