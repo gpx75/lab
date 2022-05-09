@@ -171,7 +171,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 # MARIADB
-# RUN mkdir -p /var/lib/mysql && mkdir -p /etc/mysql && mkdir -p /var/log/mysql && chown mysql:mysql /var/log/mysql
+RUN mkdir -p /var/lib/mysql && mkdir -p /etc/mysql && mkdir -p /var/log/mysql && chown mysql:mysql /var/log/mysql
+
 # adding files
 COPY ./conf/mariadb/my.cnf 							/etc/mysql/my.cnf
 COPY ./conf/mariadb/create_mariadb_admin_user.sh	/usr/local/bin/create_mariadb_admin_user.sh
