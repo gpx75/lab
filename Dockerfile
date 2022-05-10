@@ -1,6 +1,6 @@
 # TAGS
-ARG phpTag=8.1-fpm
-ARG nodeTag=18-bullseye
+ARG phpTag=7.4-fpm
+ARG nodeTag=16-bullseye
 ARG composerTag=latest
 
 ##
