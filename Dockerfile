@@ -1,6 +1,6 @@
 # TAGS
-ARG phpTag=8.1-fpm
-ARG nodeTag=18-bullseye
+ARG phpTag=5.6-fpm-stretch
+ARG nodeTag=16-stretch
 ARG composerTag=latest
 
 ##
@@ -22,7 +22,7 @@ ARG appName=app
 ADD ./conf/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 ADD ./conf/php/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
 ADD ./conf/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-ADD ./conf/php/zend-opcache.ini /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
+# ADD ./conf/php/zend-opcache.ini /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 # RUN mkdir -p /var/log/php
 
 RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/sh www -g www
@@ -73,6 +73,7 @@ RUN  apt-get --no-install-recommends install -y \
 	nano \
 	vim \
 	supervisor \
+	libpcre3-dev \
 	&& apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 #**********************************************
@@ -85,19 +86,26 @@ WORKDIR /opt/oracle
 # Add volumes
 # VOLUME  ["/opt/oracle"]
 
-# Links below are latest release
-# It's the Version 19.9.0.0.0(Requires glibc 2.14) by 24 of November 2020
-RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip && \ 
-	wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-sdk-linuxx64.zip
+# RUN wget https://download.oracle.com/otn/linux/instantclient/122010/instantclient-basic-linux.x64-12.2.0.1.0.zip && \  need login on this version
+# 	wget https://download.oracle.com/otn/linux/instantclient/122010/instantclient-sdk-linux.x64-12.2.0.1.0.zip
 
-RUN unzip -o instantclient-basic-linuxx64.zip -d /opt/oracle && rm -f instantclient-basic-linuxx64.zip && \
-	unzip -o instantclient-sdk-linuxx64.zip -d /opt/oracle && rm -f instantclient-sdk-linuxx64.zip 
+ADD ./conf/oci8/instantclient-basic-linux.x64-12.2.0.1.0.zip /opt/oracle/ 
+ADD ./conf/oci8/instantclient-sdk-linux.x64-12.2.0.1.0.zip /opt/oracle/ 
+ADD ./conf/oci8/instantclient-sqlplus-linux.x64-12.2.0.1.0.zip /opt/oracle/ 
 
-RUN ln -sv /opt/oracle/instantclient_* /opt/oracle/instantclient -f
+RUN unzip -o instantclient-basic-linux.x64-12.2.0.1.0.zip -d /opt/oracle && rm -f instantclient-basic-linux.x64-12.2.0.1.0.zip && \
+	unzip -o instantclient-sdk-linux.x64-12.2.0.1.0.zip -d /opt/oracle && rm -f instantclient-sdk-linux.x64-12.2.0.1.0.zip  && \
+	unzip -o instantclient-sqlplus-linux.x64-12.2.0.1.0.zip -d /opt/oracle && rm -f instantclient-sqlplus-linux.x64-12.2.0.1.0.zip
+
+RUN mv instantclient_12_2 /opt/oracle/instantclient
+
+# RUN ln -sv /opt/oracle/instantclient_12_2 /opt/oracle/instantclient -f
 RUN ln -s /opt/oracle/instantclient/sqlplus /usr/bin/sqlplus
+RUN ln -s /opt/oracle/instantclient/libclntsh.so.12.1 /opt/oracle/instantclient/libclntsh.so
+RUN ln -s /opt/oracle/instantclient/libocci.so.12.1 /opt/oracle/instantclient/libocci.so
 
 # setup ld library path
-RUN sh -c "echo '/opt/oracle/instantclient' >> /etc/ld.so.conf"
+RUN sh -c "echo '/opt/oracle/instantclient' >>  /etc/ld.so.conf.d/oracle-instantclient.conf"
 RUN ldconfig
 
 # oci8
@@ -130,21 +138,21 @@ RUN docker-php-ext-install intl
 # pdo 
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install pdo_pgsql
-RUN docker-php-ext-configure pdo_oci --with-pdo_oci=instantclient,/opt/oracle/instantclient 
-RUN docker-php-ext-install pdo_oci
+# RUN docker-php-ext-configure pdo_oci --with-pdo_oci=instantclient,/opt/oracle/instantclient 
+# RUN docker-php-ext-install pdo_oci
 RUN docker-php-ext-install exif
 RUN docker-php-ext-install pcntl
 RUN docker-php-ext-install bcmath
 RUN docker-php-ext-install soap
-RUN if [ "$phpTag" = "7.4-fpm" ] ; then docker-php-ext-install json && docker-php-ext-install tokenizer ; else echo "json & tokenizer already included in php > 7.4" ; fi
+RUN if [ "$phpTag" = "5.6-fpm" ] ; then docker-php-ext-install json && docker-php-ext-install tokenizer ; else echo "json & tokenizer already included in php > 7.4" ; fi
 RUN docker-php-ext-install opcache
 RUN docker-php-ext-install ctype
 # memcached
-RUN pecl install memcached && docker-php-ext-enable memcached
+# RUN pecl install memcached && docker-php-ext-enable memcached
 # redis
-RUN pecl install -o -f redis \
+RUN pecl install -o -f redis-3.1.3 \
 	&&  rm -rf /tmp/pear \
-	&&  docker-php-ext-enable redis
+	&&  docker-php-ext-enable --ini-name pecl.ini redis
 
 # # xdebug
 # RUN pecl install xdebug && docker-php-ext-enable xdebug
