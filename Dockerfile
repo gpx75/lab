@@ -161,7 +161,7 @@ COPY --from=node /usr/local/bin /usr/local/bin
 COPY --from=node /opt /opt
 
 # supervisor
-COPY ./conf/supervisor.conf /etc/supervisor/supervisor.conf
+COPY ./conf/supervisord.conf /etc/supervisor/supervisord.conf
 
 # NGINX
 ADD ./conf/nginx/nginx.conf /etc/nginx/nginx.conf
