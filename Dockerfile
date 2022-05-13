@@ -20,7 +20,6 @@ ARG appName=app
 
 # php
 ADD ./conf/php/www.conf /usr/local/etc/php-fpm.d/www.conf
-ADD ./conf/php/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
 ADD ./conf/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 ADD ./conf/php/zend-opcache.ini /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini
 # RUN mkdir -p /var/log/php
@@ -162,7 +161,7 @@ COPY --from=node /usr/local/bin /usr/local/bin
 COPY --from=node /opt /opt
 
 # supervisor
-COPY ./conf/daemons.conf /etc/supervisor/conf.d/daemons.conf
+COPY ./conf/supervisor.conf /etc/supervisor/supervisor.conf
 
 # NGINX
 ADD ./conf/nginx/nginx.conf /etc/nginx/nginx.conf
