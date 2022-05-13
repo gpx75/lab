@@ -1,6 +1,6 @@
 # TAGS
 ARG phpTag=7.4-fpm
-ARG nodeTag=16-bullseye
+ARG nodeTag=14-bullseye-slim
 ARG composerTag=latest
 
 ##
@@ -38,7 +38,7 @@ RUN chown www:www /var/www/$appName
 
 # Fix debconf warnings upon build
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qqy && apt-get install --assume-yes apt-utils
+RUN apt-get update -qqy && apt-get upgrade && apt-get install --assume-yes apt-utils
 RUN  apt-get --no-install-recommends install -y \
 	git \
 	libzip-dev \
@@ -68,9 +68,9 @@ RUN  apt-get --no-install-recommends install -y \
 	wget \
 	libz-dev \	
 	nginx \
-	mariadb-server mariadb-client \
+	# mariadb-server mariadb-client \
 	redis-server \
-	nano \
+	# nano \
 	vim \
 	supervisor \
 	&& apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
@@ -162,7 +162,7 @@ COPY --from=node /usr/local/bin /usr/local/bin
 COPY --from=node /opt /opt
 
 # supervisor
-COPY ./conf/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./conf/daemons.conf /etc/supervisor/conf.d/daemons.conf
 
 # NGINX
 ADD ./conf/nginx/nginx.conf /etc/nginx/nginx.conf
@@ -172,25 +172,25 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 # MARIADB
-RUN mkdir -p /var/lib/mysql && mkdir -p /etc/mysql && mkdir -p /var/log/mysql && chown mysql:mysql /var/log/mysql
+# RUN mkdir -p /var/lib/mysql && mkdir -p /etc/mysql && mkdir -p /var/log/mysql && chown mysql:mysql /var/log/mysql
 
 # adding files
-COPY ./conf/mariadb/my.cnf 							/etc/mysql/my.cnf
-COPY ./conf/mariadb/create_mariadb_admin_user.sh	/usr/local/bin/create_mariadb_admin_user.sh
+# COPY ./conf/mariadb/my.cnf 							/etc/mysql/my.cnf
+# COPY ./conf/mariadb/create_mariadb_admin_user.sh	/usr/local/bin/create_mariadb_admin_user.sh
 RUN chmod +x /usr/local/bin/*
 
 # configuration options
 # Set the environment variables inside container
-ENV MYSQL_ROOT_PASSWORD mypassword
-ENV MYSQL_DATADIR /var/lib/mysql
+# ENV MYSQL_ROOT_PASSWORD mypassword
+# ENV MYSQL_DATADIR /var/lib/mysql
 
-ENV MYSQL_BIND_ADDRESS 0.0.0.0
-ENV MYSQL_PORT 3306
+# ENV MYSQL_BIND_ADDRESS 0.0.0.0
+# ENV MYSQL_PORT 3306
 # only applies when /var/lib/mysql/mysql is empty
-ENV MYSQL_ADMIN_PASS mypassword
-ENV MYSQL_ADMIN_USER admin
-ENV MYSQL_ADMIN_HOST %
-ENV MYSQL_DB_NAME laravel
+# ENV MYSQL_ADMIN_PASS mypassword
+# ENV MYSQL_ADMIN_USER admin
+# ENV MYSQL_ADMIN_HOST %
+# ENV MYSQL_DB_NAME laravel
 
 # Redis
 COPY ./conf/redis/redis.conf /etc/redis/redis.conf
@@ -204,7 +204,7 @@ COPY ./conf/redis/redis.conf /etc/redis/redis.conf
 
 WORKDIR /var/www/$appName
 
-CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
 
 
 
