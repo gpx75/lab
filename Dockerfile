@@ -17,7 +17,7 @@ FROM php:$phpTag
 ARG appName=app
 
 # php.ini environment
-ENV environment=production
+ENV environment=development
 
 RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g www
 
@@ -130,6 +130,9 @@ RUN mkdir -p /var/cache/nginx
 RUN chown www-data:www-data /var/cache/nginx
 WORKDIR /var/www/$appName
 
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
+	&& ln -sf /dev/stderr /var/log/nginx/error.log
+
 ENV APP_NAME=$appName
 
 
@@ -143,8 +146,8 @@ ADD ./docker/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf 
 
 # PHP Error Log Files
-RUN mkdir /var/log/php
-RUN touch /var/log/php/errors.log && chmod 777 /var/log/php/errors.log
+# RUN mkdir /var/log/php
+# RUN touch /var/log/php/errors.log && chmod 777 /var/log/php/errors.log
 # RUN touch /var/log/php/access.log && chmod 777 /var/log/php/access.log
 
 # add composer
