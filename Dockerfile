@@ -121,10 +121,13 @@ RUN pecl install -o -f redis \
 # # xdebug
 # RUN pecl install xdebug && docker-php-ext-enable xdebug
 
+RUN usermod -u 1000 www-data
+
 # nginx
 ADD docker/nginx.default.conf /etc/nginx/sites-enabled/default
 ADD docker/nginx.conf /etc/nginx/nginx.conf
 RUN mkdir -p /var/www/$appName
+# Copy existing application directory contents
 RUN chown www:www /var/www/$appName
 RUN mkdir -p /var/cache/nginx
 RUN chown www-data:www-data /var/cache/nginx
