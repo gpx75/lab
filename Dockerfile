@@ -16,7 +16,10 @@ FROM php:$phpTag
 # to changhe the app folder to something else ex /var/www/otherapp
 ARG appName=app
 
-RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bassh www -g www
+# php.ini environment
+ENV environment=production
+
+RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g www
 
 # Fix debconf warnings upon build
 ARG DEBIAN_FRONTEND=noninteractive
@@ -119,19 +122,30 @@ RUN pecl install -o -f redis \
 # RUN pecl install xdebug && docker-php-ext-enable xdebug
 
 # nginx
-ADD docker/nginx.conf /etc/nginx/sites-enabled/default
+ADD docker/nginx.default.conf /etc/nginx/sites-enabled/default
+ADD docker/nginx.conf /etc/nginx/nginx.conf
 RUN mkdir -p /var/www/$appName
 RUN chown www:www /var/www/$appName
+RUN mkdir -p /var/cache/nginx
+RUN chown www-data:www-data /var/cache/nginx
 WORKDIR /var/www/$appName
 
 ENV APP_NAME=$appName
 
 
 # php
-COPY ./docker/php.ini /usr/local/etc/php/conf.d/app.ini
+COPY ./docker/app.ini /usr/local/etc/php/conf.d/app.ini
+RUN mv "$PHP_INI_DIR/php.ini-${environment}" "$PHP_INI_DIR/php.ini"
+
+# unix socket connection?
+ADD ./docker/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+# RUN sed -E -i -e 's#listen = 127.0.0.1:9000#listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf 
+RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf 
+
 # PHP Error Log Files
 RUN mkdir /var/log/php
 RUN touch /var/log/php/errors.log && chmod 777 /var/log/php/errors.log
+# RUN touch /var/log/php/access.log && chmod 777 /var/log/php/access.log
 
 # add composer
 COPY --from=composer /usr/bin/composer /usr/bin/composer
@@ -155,7 +169,3 @@ RUN chmod +x /var/www/entrypoint.sh
 
 EXPOSE 80
 ENTRYPOINT ["/var/www/entrypoint.sh"]
-
-
-
-
