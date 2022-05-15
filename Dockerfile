@@ -121,7 +121,7 @@ RUN pecl install -o -f redis \
 # # xdebug
 # RUN pecl install xdebug && docker-php-ext-enable xdebug
 
-RUN usermod -u 1000 www-data
+RUN usermod -a -G www-data www
 
 # nginx
 ADD docker/nginx.default.conf /etc/nginx/sites-enabled/default
@@ -131,12 +131,12 @@ RUN mkdir -p /var/www/$appName
 RUN chown www:www /var/www/$appName
 RUN mkdir -p /var/cache/nginx
 RUN chown www-data:www-data /var/cache/nginx
-WORKDIR /var/www/$appName
 
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
-ENV APP_NAME=$appName
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
+	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 
 # php
@@ -170,6 +170,20 @@ ADD docker/supervisor.conf /etc/supervisor/supervisord.conf
 # redis
 ADD docker/redis.conf /etc/redis/redis.conf
 COPY ./docker/entrypoint.sh /var/www/entrypoint.sh
+
+WORKDIR /var/www/$appName
+ENV APP_NAME=$appName
+
+COPY ./src /var/www/$appName/
+
+RUN chown -R www-data:www-data /var/www/$appName
+RUN find /var/www/$appName -type f -exec chmod 644 {} \;
+RUN find /var/www/$appName -type d -exec chmod 755 {} \;
+RUN chown -R $USER:www-data /var/www/$appName
+RUN find . -type f -exec chmod 664 {} \;
+RUN find . -type d -exec chmod 775 {} \;
+RUN chgrp -R www-data storage /var/www/$appName/bootstrap/cache
+RUN chmod -R ug+rwx storage /var/www/$appName/bootstrap/cache
 
 RUN chmod +x /var/www/entrypoint.sh
 
