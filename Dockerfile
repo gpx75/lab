@@ -42,7 +42,6 @@ RUN  apt-get --no-install-recommends install -y \
 	build-essential \
 	unzip \
 	zip \
-	ffmpeg \
 	libmemcached11 \
 	libmemcachedutil2 \
 	build-essential \
@@ -54,7 +53,6 @@ RUN  apt-get --no-install-recommends install -y \
 	libz-dev \
 	nginx \
 	redis-server \
-	vim \
 	libldap2-dev \
 	supervisor
 
@@ -65,9 +63,9 @@ RUN mkdir -p /opt/oracle
 WORKDIR /opt/oracle
 # Links below are latest release
 # It's the Version 19.9.0.0.0(Requires glibc 2.14) by 24 of November 2020
-RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basic-linuxx64.zip && \ 
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip && \ 
 	wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-sdk-linuxx64.zip
-RUN unzip -o instantclient-basic-linuxx64.zip -d /opt/oracle && rm -f instantclient-basic-linuxx64.zip && \
+RUN unzip -o instantclient-basiclite-linuxx64.zip -d /opt/oracle && rm -f instantclient-basiclite-linuxx64.zip && \
 	unzip -o instantclient-sdk-linuxx64.zip -d /opt/oracle && rm -f instantclient-sdk-linuxx64.zip 
 #
 RUN ln -sv /opt/oracle/instantclient_* /opt/oracle/instantclient -f
@@ -157,8 +155,8 @@ RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /u
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 # add -node
-COPY --from=node /usr/lib /usr/lib
-COPY --from=node /usr/local/share /usr/local/share
+# COPY --from=node /usr/lib /usr/lib
+# COPY --from=node /usr/local/share /usr/local/share
 COPY --from=node /usr/local/lib /usr/local/lib
 COPY --from=node /usr/local/include /usr/local/include
 COPY --from=node /usr/local/bin /usr/local/bin
@@ -169,12 +167,12 @@ ADD docker/supervisor.conf /etc/supervisor/supervisord.conf
 
 # redis
 ADD docker/redis.conf /etc/redis/redis.conf
-COPY ./docker/entrypoint.sh /var/www/entrypoint.sh
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /var/www/$appName
 ENV APP_NAME=$appName
 
-COPY ./src /var/www/$appName/
+COPY ./src*/ /var/www/$appName/
 
 RUN chown -R www-data:www-data /var/www/$appName
 RUN find /var/www/$appName -type f -exec chmod 644 {} \;
@@ -182,10 +180,10 @@ RUN find /var/www/$appName -type d -exec chmod 755 {} \;
 RUN chown -R $USER:www-data /var/www/$appName
 RUN find . -type f -exec chmod 664 {} \;
 RUN find . -type d -exec chmod 775 {} \;
-RUN chgrp -R www-data storage /var/www/$appName/bootstrap/cache
-RUN chmod -R ug+rwx storage /var/www/$appName/bootstrap/cache
+# RUN chgrp -R www-data storage /var/www/$appName/bootstrap/cache
+# RUN chmod -R ug+rwx storage /var/www/$appName/bootstrap/cache
 
-RUN chmod +x /var/www/entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE 80
-ENTRYPOINT ["/var/www/entrypoint.sh"]
+EXPOSE 80 3000 3001
+ENTRYPOINT ["docker-entrypoint.sh"]
