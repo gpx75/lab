@@ -167,6 +167,8 @@ ADD docker/supervisor.conf /etc/supervisor/supervisord.conf
 
 # redis
 ADD docker/redis.conf /etc/redis/redis.conf
+
+
 COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /var/www/$appName
