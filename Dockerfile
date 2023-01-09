@@ -1,5 +1,5 @@
 # TAGS
-ARG phpTag=7.4-fpm
+ARG phpTag=8.2-fpm
 ARG nodeTag=14-bullseye-slim
 ARG composerTag=latest
 
@@ -9,8 +9,8 @@ FROM composer:$composerTag as composer
 #
 
 ## main image php ufficial
-FROM php:$phpTag 
-## 
+FROM php:$phpTag
+##
 
 # MORE TAGS HERE
 # to changhe the app folder to something else ex /var/www/otherapp
@@ -63,10 +63,10 @@ RUN mkdir -p /opt/oracle
 WORKDIR /opt/oracle
 # Links below are latest release
 # It's the Version 19.9.0.0.0(Requires glibc 2.14) by 24 of November 2020
-RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip && \ 
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linuxx64.zip && \
 	wget https://download.oracle.com/otn_software/linux/instantclient/instantclient-sdk-linuxx64.zip
 RUN unzip -o instantclient-basiclite-linuxx64.zip -d /opt/oracle && rm -f instantclient-basiclite-linuxx64.zip && \
-	unzip -o instantclient-sdk-linuxx64.zip -d /opt/oracle && rm -f instantclient-sdk-linuxx64.zip 
+	unzip -o instantclient-sdk-linuxx64.zip -d /opt/oracle && rm -f instantclient-sdk-linuxx64.zip
 #
 RUN ln -sv /opt/oracle/instantclient_* /opt/oracle/instantclient -f
 RUN ln -s /opt/oracle/instantclient/sqlplus /usr/bin/sqlplus
@@ -75,7 +75,7 @@ RUN sh -c "echo '/opt/oracle/instantclient' >> /etc/ld.so.conf"
 RUN ldconfig
 
 # oci8
-RUN docker-php-ext-configure oci8 --with-oci8=instantclient,/opt/oracle/instantclient && docker-php-ext-install oci8 && docker-php-ext-enable oci8 
+RUN docker-php-ext-configure oci8 --with-oci8=instantclient,/opt/oracle/instantclient && docker-php-ext-install oci8 && docker-php-ext-enable oci8
 
 # ldap
 RUN docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ && \
@@ -91,16 +91,16 @@ RUN docker-php-ext-configure imap \
 	--with-kerberos \
 	--with-imap-ssl
 RUN docker-php-ext-install imap
-# zip 
+# zip
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install zip
 # intl
 RUN docker-php-ext-configure intl
 RUN docker-php-ext-install intl
-# pdo 
+# pdo
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install pdo_pgsql
-RUN docker-php-ext-configure pdo_oci --with-pdo_oci=instantclient,/opt/oracle/instantclient 
+RUN docker-php-ext-configure pdo_oci --with-pdo_oci=instantclient,/opt/oracle/instantclient
 RUN docker-php-ext-install pdo_oci
 RUN docker-php-ext-install exif
 RUN docker-php-ext-install pcntl
@@ -143,8 +143,8 @@ RUN mv "$PHP_INI_DIR/php.ini-${environment}" "$PHP_INI_DIR/php.ini"
 
 # unix socket connection?
 ADD ./docker/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-# RUN sed -E -i -e 's#listen = 127.0.0.1:9000#listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf 
-RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf 
+# RUN sed -E -i -e 's#listen = 127.0.0.1:9000#listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
+RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
 
 # PHP Error Log Files
 # RUN mkdir /var/log/php
@@ -187,5 +187,5 @@ RUN find . -type d -exec chmod 775 {} \;
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE 80 3000 3001
+EXPOSE 80
 ENTRYPOINT ["docker-entrypoint.sh"]
