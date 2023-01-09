@@ -1,5 +1,5 @@
 # TAGS
-ARG phpTag=8.1-fpm
+ARG phpTag=8.2-fpm
 ARG nodeTag=14-bullseye-slim
 ARG composerTag=latest
 
