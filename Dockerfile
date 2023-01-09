@@ -17,7 +17,7 @@ FROM php:$phpTag
 ARG appName=app
 
 # php.ini environment
-ENV environment=development
+ENV environment=production
 
 RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g www
 
