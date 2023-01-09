@@ -143,13 +143,8 @@ RUN mv "$PHP_INI_DIR/php.ini-${environment}" "$PHP_INI_DIR/php.ini"
 
 # unix socket connection?
 ADD ./docker/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-# RUN sed -E -i -e 's#listen = 127.0.0.1:9000#listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
-RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
 
-# PHP Error Log Files
-# RUN mkdir /var/log/php
-# RUN touch /var/log/php/errors.log && chmod 777 /var/log/php/errors.log
-# RUN touch /var/log/php/access.log && chmod 777 /var/log/php/access.log
+RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
 
 # add composer
 COPY --from=composer /usr/bin/composer /usr/bin/composer
