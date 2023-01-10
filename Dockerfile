@@ -23,7 +23,8 @@ RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g
 
 # Fix debconf warnings upon build
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -qqy && apt-get upgrade && DEBIAN_FRONTEND=noninteractive apt-get -qq install apt-utils
+RUN apt-get update -qqy && apt-get upgrade -qqy
+RUN apt-get -qq install --assume-yes --no-install-recommends apt-utils
 RUN  apt-get --no-install-recommends install -y \
 	git \
 	libzip-dev \
