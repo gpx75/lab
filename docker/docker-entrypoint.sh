@@ -1,9 +1,14 @@
 #!/bin/sh
 
-# cd /var/www/$APP_NAME non funziona
+Red='\033[0;31m'          # Red
+Green='\033[0;32m'        # Green
+echo ""
+echo "***********************************************************"
+echo " Starting " $APP_NAME " Container                   "
+echo "***********************************************************"
 
-# php artisan migrate:fresh --seed
-# php artisan cache:clear
-# php artisan route:cache
+set -e
+
 
 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+

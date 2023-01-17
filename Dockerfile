@@ -3,6 +3,7 @@ ARG phpTag=8.1-fpm
 ARG nodeTag=14-bullseye-slim
 ARG composerTag=latest
 
+
 #
 FROM node:${nodeTag} as node
 FROM composer:$composerTag as composer
@@ -12,14 +13,21 @@ FROM composer:$composerTag as composer
 FROM php:$phpTag
 ##
 
+ARG HOST_UID=1000
+ENV USER=www-data
+
 # MORE TAGS HERE
 # to changhe the app folder to something else ex /var/www/otherapp
-ARG appName=app
+ARG appName=lab
+ENV APP_NAME=${appName}
+
+ARG WORKDIR=/var/www/${appName}
+ENV DOCUMENT_ROOT=${WORKDIR}
 
 # php.ini environment
-ENV environment=production
+ENV environment=development
 
-RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g www
+# RUN $(getent group www) ] || groupadd www && useradd -u 1000 -s /bin/bash www -g www
 
 # Fix debconf warnings upon build
 ARG DEBIAN_FRONTEND=noninteractive
@@ -53,7 +61,7 @@ RUN  apt-get --no-install-recommends install -y \
 	wget \
 	libz-dev \
 	nginx \
-	redis-server \
+	# redis-server \
 	libldap2-dev \
 	supervisor
 
@@ -120,19 +128,21 @@ RUN pecl install -o -f redis \
 # # xdebug
 # RUN pecl install xdebug && docker-php-ext-enable xdebug
 
-RUN usermod -a -G www-data www
+# RUN usermod -a -G www-data www
 
 # nginx
 ADD docker/nginx.default.conf /etc/nginx/sites-enabled/default
-ADD docker/nginx.conf /etc/nginx/nginx.conf
-RUN mkdir -p /var/www/$appName
-# Copy existing application directory contents
-RUN chown www:www /var/www/$appName
-RUN mkdir -p /var/cache/nginx
-RUN chown www-data:www-data /var/cache/nginx
+# ADD docker/nginx.conf /etc/nginx/nginx.conf
 
-RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+RUN rm -Rf /var/www/* && \
+mkdir -p /var/www/html
+
+RUN mkdir -p /var/www/$appName
+
+# # Copy existing application directory contents
+# RUN chown www:www /var/www/$appName
+# RUN mkdir -p /var/cache/nginx
+# RUN chown www-data:www-data /var/cache/nginx
 
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
@@ -142,9 +152,8 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 COPY ./docker/app.ini /usr/local/etc/php/conf.d/app.ini
 RUN mv "$PHP_INI_DIR/php.ini-${environment}" "$PHP_INI_DIR/php.ini"
 
-# unix socket connection?
+#unix socket connection?
 ADD ./docker/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-# RUN sed -E -i -e 's#listen = 127.0.0.1:9000#listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
 RUN sed -E -i -e 's#listen = 127.0.0.1:9000#;listen = /var/run/php-fpm.sock#' /usr/local/etc/php-fpm.d/www.conf
 
 # add composer
@@ -162,26 +171,25 @@ COPY --from=node /opt /opt
 ADD docker/supervisor.conf /etc/supervisor/supervisord.conf
 
 # redis
-ADD docker/redis.conf /etc/redis/redis.conf
+# ADD docker/redis.conf /etc/redis/redis.conf
 
-
-COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /var/www/$appName
 ENV APP_NAME=$appName
 
 COPY ./src*/ /var/www/$appName/
 
-RUN chown -R www-data:www-data /var/www/$appName
-RUN find /var/www/$appName -type f -exec chmod 644 {} \;
-RUN find /var/www/$appName -type d -exec chmod 755 {} \;
-RUN chown -R $USER:www-data /var/www/$appName
-RUN find . -type f -exec chmod 664 {} \;
-RUN find . -type d -exec chmod 775 {} \;
-# RUN chgrp -R www-data storage /var/www/$appName/bootstrap/cache
-# RUN chmod -R ug+rwx storage /var/www/$appName/bootstrap/cache
-
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN ln -s /usr/local/bin/docker-entrypoint.sh /
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+RUN usermod -u ${HOST_UID} www-data
+RUN groupmod -g ${HOST_UID} www-data
+RUN chmod -R 755 $WORKDIR
+RUN chown -R www-data:www-data $WORKDIR
 
 EXPOSE 80
-ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD [ "docker-entrypoint" ]
